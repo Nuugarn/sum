@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F4F1E8;
+    --surface: #FFFFFF;
+    --ink: #23261F;
+    --ink-soft: #6B6A5E;
+    --rule: #D9D2BE;
+    --rule-blue: #C7D2E8;
+    --accent: #2F4B7C;
+    --accent-soft: #E7ECF3;
+    --important: #B8752B;
+    --important-soft: #F6E9D8;
+    --overdue: #A83A2C;
+    --overdue-soft: #F5E2DE;
+    --done: #3E7A52;
+    --done-soft: #E2EFE4;
+    --card-radius: 3px;
+    --tab-radius: 10px;
+    --shadow: 0 1px 0 rgba(35,38,31,0.08), 0 6px 16px -10px rgba(35,38,31,0.25);
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  button{ font-family: inherit; }
+  :focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- App Shell ---------- */
+  #app{
+    max-width: 1040px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 22px 20px 14px;
+    gap: 12px;
+  }
+  .brand{
+    display:flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .brand-mark{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width: 34px; height: 34px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    transform: rotate(-3deg);
+    position: relative;
+  }
+  .brand-mark::after{
+    content:"";
+    position:absolute;
+    left:6px; right:6px; top: 12px;
+    height:1px;
+    background: var(--overdue);
+    opacity: 0.55;
+  }
+  .brand-mark svg{ width:16px; height:16px; color: var(--accent); }
+  .brand h1{
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  .brand span.sub{
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .btn:hover{ background:#28406a; }
+  .btn:active{ transform: translateY(1px); }
+  .btn svg{ width:15px; height:15px; }
+  .btn.secondary{
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--rule);
+  }
+  .btn.secondary:hover{ background: #F8F6F0; }
+  .btn.danger{
+    background: var(--overdue-soft);
+    color: var(--overdue);
+    border: 1px solid #E3C3BC;
+  }
+  .btn.danger:hover{ background:#f0d5cf; }
+  .btn.ghost{
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid transparent;
+    padding: 8px 10px;
+  }
+  .btn.ghost:hover{ background: rgba(0,0,0,0.04); color: var(--ink); }
+  .btn.full{ width:100%; justify-content:center; }
+  .btn[disabled]{ opacity:.5; cursor:not-allowed; }
+
+  /* ---------- Layout: sidebar + content ---------- */
+  .layout{
+    flex: 1;
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 18px;
+    padding: 0 20px 100px;
+    align-items: start;
+  }
+
+  nav.tabs{
+    display:flex;
+    flex-direction: column;
+    gap: 6px;
+    position: sticky;
+    top: 18px;
+  }
+  nav.tabs button{
+    text-align:left;
+    background: #EBE6D8;
+    border: 1px solid var(--rule);
+    border-right: none;
+    border-radius: var(--tab-radius) 0 0 var(--tab-radius);
+    padding: 11px 14px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    position: relative;
+    margin-right: -1px;
+  }
+  nav.tabs button .count{
+    display:block;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    opacity: .75;
+    margin-top: 2px;
+  }
+  nav.tabs button.active{
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: -3px 0 0 var(--accent) inset;
+    z-index: 1;
+  }
+  nav.tabs button.active .count{ color: var(--accent); opacity: 1; }
+
+  main.content{
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow);
+    min-height: 420px;
+    padding: 6px;
+  }
+
+  /* ---------- Task list ---------- */
+  .list-head{
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 16px 16px 8px;
+  }
+  .list-head h2{
+    font-size: 15px;
+    margin: 0;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .list-head .hint{ font-size: 12.5px; color: var(--ink-soft); }
+
+  ul.task-list{
+    list-style: none;
+    margin: 0;
+    padding: 6px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task-card{
+    width: 100%;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px 6px 4px 4px;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease;
+  }
+  .task-card:hover{
+    box-shadow: 0 4px 14px -8px rgba(35,38,31,0.35);
+    border-color: #C8C0A8;
+  }
+  .task-card:active{ transform: translateY(1px); }
+  .task-card.is-overdue{ border-color: #DCB6AC; }
+  .task-card.is-done{ opacity: .68; }
+
+  .card-head{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    padding: 10px 12px 8px;
+    border-bottom: 1.5px solid var(--overdue);
+    opacity: 1;
+  }
+  .card-head .star{ color: var(--important); flex-shrink:0; width:15px; height:15px; }
+  .card-head .star.off{ color: var(--rule); }
+  .card-head .title{
+    flex:1;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-head .chev{ color: var(--ink-soft); width:16px; height:16px; flex-shrink:0; }
+
+  .card-body{
+    padding: 8px 12px 11px;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent, transparent 20px, var(--rule-blue) 20px, var(--rule-blue) 21px
+    );
+    background-position: 0 4px;
+  }
+  .card-meta{
+    display:flex;
+    align-items:center;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    font-size: 13px;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 12.5px;
+    line-height: 1.8;
+    white-space: nowrap;
+  }
+  .pill.status-todo{ background: #ECEAE0; color: var(--ink-soft); }
+  .pill.status-in_progress{ background: var(--accent-soft); color: var(--accent); }
+  .pill.status-done{ background: var(--done-soft); color: var(--done); }
+  .pill.overdue{ background: var(--overdue-soft); color: var(--overdue); }
+  .due-text{ color: var(--ink-soft); }
+  .due-text.urgent{ color: var(--overdue); font-weight: 600; }
+
+  /* ---------- Empty / loading / error ---------- */
+  .state-block{
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap: 10px;
+    padding: 70px 20px;
+    color: var(--ink-soft);
+  }
+  .state-block svg{ width:34px; height:34px; opacity:.55; }
+  .state-block p{ margin:0; font-size:14.5px; }
+  .state-block p.lead{ font-size:15px; font-weight:600; color: var(--ink); }
+
+  /* ---------- Detail view ---------- */
+  .detail{
+    padding: 4px 6px 20px;
+  }
+  .detail-topbar{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 12px 10px 4px;
+  }
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:none;
+    border:none;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 600;
+    cursor:pointer;
+    padding: 6px 4px;
+  }
+  .back-link:hover{ color: var(--ink); }
+  .back-link svg{ width:16px; height:16px; }
+
+  .detail-card{
+    margin: 8px 10px 0;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow:hidden;
+  }
+  .detail-header{
+    padding: 20px 22px 16px;
+    border-bottom: 2px solid var(--overdue);
+    display:flex;
+    align-items:flex-start;
+    gap: 10px;
+  }
+  .detail-header .star{ color: var(--important); width:20px; height:20px; margin-top:3px; flex-shrink:0; }
+  .detail-header .star.off{ color: var(--rule); }
+  .detail-header h2{
+    margin:0;
+    font-size: 21px;
+    font-weight: 700;
+    line-height:1.3;
+  }
+
+  .detail-body{
+    padding: 18px 22px 22px;
+    background-image: repeating-linear-gradient(
+      to bottom, transparent, transparent 27px, var(--rule-blue) 27px, var(--rule-blue) 28px
+    );
+    background-position: 0 8px;
+  }
+  .field{ margin-bottom: 18px; }
+  .field:last-child{ margin-bottom:0; }
+  .field .label{
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .field .value{ font-size: 15px; color: var(--ink); white-space: pre-wrap; }
+  .field .value.muted{ color: var(--ink-soft); font-style: normal; }
+
+  .countdown-box{
+    margin-top: 4px;
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .countdown-box.overdue{ background: var(--overdue-soft); color: var(--overdue); }
+  .countdown-box.urgent{ background: var(--important-soft); color: var(--important); }
+  .countdown-box.done{ background: var(--done-soft); color: var(--done); }
+  .countdown-box svg{ width:16px; height:16px; }
+
+  .detail-actions{
+    display:flex;
+    gap: 8px;
+    padding: 16px 22px 22px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ---------- Form ---------- */
+  .form-wrap{ padding: 4px 6px 24px; }
+  form.task-form{
+    margin: 8px 10px 0;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px;
+  }
+  .form-row{ margin-bottom: 16px; }
+  .form-row label{
+    display:block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .form-row input[type=text],
+  .form-row input[type=date],
+  .form-row input[type=time],
+  .form-row select,
+  .form-row textarea{
+    width:100%;
+    font-family: inherit;
+    font-size: 14.5px;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: #FCFBF7;
+    color: var(--ink);
+  }
+  .form-row textarea{ min-height: 90px; resize: vertical; }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus{
+    border-color: var(--accent);
+  }
+  .form-row.error input, .form-row.error select{ border-color: var(--overdue); }
+  .form-row .err-msg{ color: var(--overdue); font-size: 12.5px; margin-top: 4px; }
+  .form-grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+  .checkbox-row input{ width:17px; height:17px; accent-color: var(--important); }
+  .checkbox-row label{ margin:0; font-size:14.5px; font-weight:500; color: var(--ink); }
+  .form-actions{
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ---------- Confirm dialog ---------- */
+  .overlay{
+    position: fixed; inset:0;
+    background: rgba(35,38,31,0.35);
+    display:flex; align-items:center; justify-content:center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .confirm-box{
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 22px;
+    max-width: 340px;
+    width:100%;
+    box-shadow: 0 20px 50px -15px rgba(0,0,0,0.4);
+  }
+  .confirm-box p{ margin: 0 0 18px; font-size: 15px; }
+  .confirm-box .row{ display:flex; gap:8px; justify-content:flex-end; }
+
+  /* ---------- FAB (mobile) ---------- */
+  .fab{
+    display:none;
+    position: fixed;
+    right: 18px;
+    bottom: 22px;
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: var(--accent);
+    color:#fff;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 10px 24px -6px rgba(47,75,124,0.55);
+    border:none;
+    cursor:pointer;
+    z-index: 20;
+  }
+  .fab svg{ width:24px; height:24px; }
+  .header-add{ display:inline-flex; }
+
+  .sr-only{
+    position:absolute; width:1px;height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 760px){
+    .layout{
+      grid-template-columns: 1fr;
+      padding: 0 12px 90px;
+    }
+    nav.tabs{
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--bg);
+      flex-direction: row;
+      padding: 8px 0 10px;
+      margin: 0 -12px;
+      padding-left: 12px;
+      padding-right: 12px;
+      overflow-x: auto;
+      gap: 8px;
+    }
+    nav.tabs button{
+      border-radius: var(--tab-radius);
+      border-right: 1px solid var(--rule);
+      margin-right:0;
+      flex-shrink:0;
+    }
+    nav.tabs button.active{ box-shadow: 0 -3px 0 var(--accent) inset; }
+    header.topbar{ padding: 16px 14px 6px; }
+    .header-add{ display:none; }
+    .fab{ display:flex; }
+    .form-grid-2{ grid-template-columns: 1fr; }
+    .detail-header h2{ font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     Constants & helpers
+  ========================================================= */
+  var STORAGE_KEY = "task-index:tasks:v1";
+  var CATEGORY_LABELS = { school: "โรงเรียน" };
+  var STATUS_LABELS = { todo: "ยังไม่เริ่ม", in_progress: "กำลังทำ", done: "เสร็จแล้ว" };
+  var MONTHS_FULL = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  var MONTHS_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+
+  var ICONS = {
+    star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6l2.9 6.2 6.8.8-5 4.7 1.3 6.8L12 17.9 5.9 21.1l1.3-6.8-5-4.7 6.8-.8L12 2.6z"/></svg>',
+    starOutline: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2.6l2.9 6.2 6.8.8-5 4.7 1.3 6.8L12 17.9 5.9 21.1l1.3-6.8-5-4.7 6.8-.8L12 2.6z" stroke-linejoin="round"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-1 0v12a2 2 0 01-2 2h-4a2 2 0 01-2-2V7h8z" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h4l2 3h4l2-3h4M4 12l1.6-6.4A2 2 0 017.5 4h9a2 2 0 011.9 1.6L20 12M4 12v6a2 2 0 002 2h12a2 2 0 002-2v-6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 9v4m0 4h.01M10.3 3.9L2.7 17a2 2 0 001.7 3h15.2a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
+  function uid(){
+    return "task-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+  }
+  function nowISO(){ return new Date().toISOString(); }
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+  function escapeHtml(str){
+    return String(str == null ? "" : str).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  function formatDueShort(dueAt){
+    var d = new Date(dueAt);
+    if (isNaN(d)) return "-";
+    return d.getDate() + " " + MONTHS_SHORT[d.getMonth()] + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function formatDueFullDate(dueAt){
+    var d = new Date(dueAt);
+    if (isNaN(d)) return "-";
+    return d.getDate() + " " + MONTHS_FULL[d.getMonth()] + " " + (d.getFullYear() + 543);
+  }
+  function formatDueFullTime(dueAt){
+    var d = new Date(dueAt);
+    if (isNaN(d)) return "-";
+    return pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  /* Countdown: computed live from dueAt + current time, per spec sections 11-13, 36 */
+  function computeCountdown(dueAt, status){
+    if (status === "done"){
+      return { text: "เสร็จแล้ว", state: "done" };
+    }
+    var due = new Date(dueAt).getTime();
+    var now = Date.now();
+    var diffMs = due - now;
+
+    if (diffMs <= 0){
+      var overMs = -diffMs;
+      var oh = Math.floor(overMs / 3600000);
+      var om = Math.floor((overMs % 3600000) / 60000);
+      return { text: "เลยกำหนด " + oh + " ชั่วโมง " + om + " นาที", state: "overdue" };
+    }
+
+    var totalMinutes = Math.floor(diffMs / 60000);
+    var days = Math.floor(totalMinutes / 1440);
+    var hours = Math.floor((totalMinutes % 1440) / 60);
+    var minutes = totalMinutes % 60;
+
+    if (diffMs >= 3600000 * 24){
+      return { text: "เหลือ " + days + " วัน " + hours + " ชั่วโมง", state: "normal" };
+    }
+    if (diffMs >= 3600000){
+      return { text: "เหลือ " + hours + " ชั่วโมง " + minutes + " นาที", state: "urgent" };
+    }
+    return { text: "เหลือ " + minutes + " นาที", state: "urgent" };
+  }
+
+  function isOverdue(task){
+    return task.status !== "done" && new Date(task.dueAt).getTime() < Date.now();
+  }
+
+  /* =========================================================
+     Storage
+  ========================================================= */
+  function seedTasks(){
+    var now = Date.now();
+    return [
+      {
+        id: uid(),
+        title: "รายงานวิทยาศาสตร์",
+        category: "school",
+        important: true,
+        description: "ทำรายงานเกี่ยวกับระบบสุริยะ\nจำนวน 10 หน้า",
+        status: "in_progress",
+        dueAt: new Date(now + 1000 * 60 * 60 * 20).toISOString(),
+        createdAt: nowISO(),
+        updatedAt: nowISO()
+      },
+      {
+        id: uid(),
+        title: "การบ้านคณิตศาสตร์",
+        category: "school",
+        important: false,
+        description: "แบบฝึกหัดบทที่ 4 ข้อ 1-20",
+        status: "todo",
+        dueAt: new Date(now + 1000 * 60 * 60 * 24 * 3.5).toISOString(),
+        createdAt: nowISO(),
+        updatedAt: nowISO()
+      },
+      {
+        id: uid(),
+        title: "อ่านหนังสือสอบ",
+        category: "school",
+        important: true,
+        description: "ทบทวนบทที่ 1-5 ก่อนสอบกลางภาค",
+        status: "todo",
+        dueAt: new Date(now - 1000 * 60 * 60 * 5).toISOString(),
+        createdAt: nowISO(),
+        updatedAt: nowISO()
+      },
+      {
+        id: uid(),
+        title: "เตรียม Presentation",
+        category: "school",
+        important: false,
+        description: "สไลด์นำเสนอวิชาสังคม หัวข้อ ประวัติศาสตร์ท้องถิ่น",
+        status: "done",
+        dueAt: new Date(now - 1000 * 60 * 60 * 24 * 2).toISOString(),
+        createdAt: nowISO(),
+        updatedAt: nowISO()
+      }
+    ];
+  }
+
+  function loadTasks(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw){
+        var seeded = seedTasks();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+        return { ok:true, tasks: seeded };
+      }
+      var parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) throw new Error("invalid shape");
+      return { ok:true, tasks: parsed };
+    }catch(e){
+      return { ok:false, tasks: [] };
+    }
+  }
+  function saveTasks(tasks){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+
+  /* =========================================================
+     App state
+  ========================================================= */
+  var state = {
+    loading: true,
+    loadError: false,
+    tasks: [],
+    filter: "school",         // "school" | "important"
+    view: "list",             // "list" | "detail" | "form"
+    activeTaskId: null,
+    editingTaskId: null,      // null = creating new
+    confirmDeleteId: null,
+    formErrors: {}
+  };
+
+  function init(){
+    // simulate a brief, honest loading state before reading storage
+    render();
+    setTimeout(function(){
+      var result = loadTasks();
+      state.loading = false;
+      state.loadError = !result.ok;
+      state.tasks = result.tasks;
+      render();
+    }, 150);
+
+    setInterval(function(){
+      if (!state.loading) render();
+    }, 30000);
+  }
+
+  function persist(){
+    var ok = saveTasks(state.tasks);
+    if (!ok){
+      state.loadError = true;
+    }
+  }
+
+  /* =========================================================
+     Derived data
+  ========================================================= */
+  function filteredTasks(){
+    var list = state.tasks.filter(function(t){
+      if (state.filter === "important") return t.important === true;
+      return t.category === "school";
+    });
+    return sortTasks(list);
+  }
+
+  function sortTasks(list){
+    return list.slice().sort(function(a, b){
+      var aDone = a.status === "done";
+      var bDone = b.status === "done";
+      if (aDone !== bDone) return aDone ? 1 : -1;
+
+      var aOver = isOverdue(a);
+      var bOver = isOverdue(b);
+      if (!aDone && !bDone && aOver !== bOver) return aOver ? -1 : 1;
+
+      return new Date(a.dueAt) - new Date(b.dueAt);
+    });
+  }
+
+  function counts(){
+    var school = state.tasks.filter(function(t){ return t.category === "school"; }).length;
+    var important = state.tasks.filter(function(t){ return t.important; }).length;
+    return { school: school, important: important };
+  }
+
+  /* =========================================================
+     Rendering
+  ========================================================= */
+  var app = document.getElementById("app");
+
+  function render(){
+    var c = counts();
+    var html = "";
+    html += renderTopbar();
+    html += '<div class="layout">';
+    html += renderTabs(c);
+    html += '<main class="content" id="content">';
+    html += renderMain();
+    html += '</main>';
+    html += '</div>';
+    html += renderFab();
+    html += renderConfirmOverlay();
+
+    app.innerHTML = html;
+    bindEvents();
+  }
+
+  function renderTopbar(){
+    return (
+      '<header class="topbar">' +
+        '<div class="brand">' +
+          '<span class="brand-mark">' + ICONS.check.replace("currentColor","currentColor") + '</span>' +
+          '<div><h1>Task Index</h1><div class="sub">งานของฉัน</div></div>' +
+        '</div>' +
+        '<button class="btn header-add" data-action="new-task">' + ICONS.plus + ' เพิ่มงาน</button>' +
+      '</header>'
+    );
+  }
+
+  function renderTabs(c){
+    var items = [
+      { key: "school", label: "โรงเรียน", count: c.school },
+      { key: "important", label: "สำคัญ", count: c.important }
+    ];
+    var html = '<nav class="tabs" aria-label="มุมมองงาน">';
+    items.forEach(function(item){
+      var active = (state.view !== "form") && state.filter === item.key ? " active" : "";
+      html += '<button class="' + active.trim() + '" data-action="set-filter" data-filter="' + item.key + '" aria-pressed="' + (state.filter === item.key) + '">' +
+        escapeHtml(item.label) +
+        '<span class="count">' + item.count + ' งาน</span>' +
+      '</button>';
+    });
+    html += '</nav>';
+    return html;
+  }
+
+  function renderMain(){
+    if (state.loading) return renderLoading();
+    if (state.loadError) return renderErrorState();
+    if (state.view === "detail") return renderDetail();
+    if (state.view === "form") return renderForm();
+    return renderList();
+  }
+
+  function renderLoading(){
+    return '<div class="state-block"><p>กำลังโหลด...</p></div>';
+  }
+
+  function renderErrorState(){
+    return (
+      '<div class="state-block">' +
+        ICONS.warn +
+        '<p class="lead">ไม่สามารถโหลดงานได้</p>' +
+        '<p>อาจเป็นเพราะพื้นที่จัดเก็บของเบราว์เซอร์ไม่พร้อมใช้งาน</p>' +
+        '<button class="btn secondary" data-action="retry-load">ลองอีกครั้ง</button>' +
+      '</div>'
+    );
+  }
+
+  function renderList(){
+    var tasks = filteredTasks();
+    var heading = state.filter === "important" ? "สำคัญ" : "โรงเรียน";
+    var html = '<div class="list-head"><h2>' + heading + '</h2><span class="hint">' + tasks.length + ' งาน</span></div>';
+
+    if (tasks.length === 0){
+      html += renderEmptyState();
+      return html;
+    }
+
+    html += '<ul class="task-list">';
+    tasks.forEach(function(t){
+      html += renderTaskCard(t);
+    });
+    html += '</ul>';
+    return html;
+  }
+
+  function renderEmptyState(){
+    if (state.filter === "important"){
+      return (
+        '<div class="state-block">' +
+          ICONS.starOutline +
+          '<p class="lead">ไม่มีงานสำคัญในตอนนี้</p>' +
+          '<p>ตั้งค่างานเป็นสำคัญเพื่อให้แสดงที่นี่</p>' +
+        '</div>'
+      );
+    }
+    return (
+      '<div class="state-block">' +
+        ICONS.inbox +
+        '<p class="lead">ยังไม่มีงาน</p>' +
+        '<p>สร้างงานแรกของคุณ</p>' +
+        '<button class="btn" data-action="new-task">' + ICONS.plus + ' เพิ่มงาน</button>' +
+      '</div>'
+    );
+  }
+
+  function renderTaskCard(t){
+    var cd = computeCountdown(t.dueAt, t.status);
+    var overdue = isOverdue(t);
+    var starIcon = t.important ? ICONS.star : ICONS.starOutline;
+    var starClass = t.important ? "star" : "star off";
+    var starLabel = t.important ? "งานสำคัญ" : "ไม่ใช่งานสำคัญ";
+
+    var statusPill = '<span class="pill status-' + t.status + '">' + escapeHtml(STATUS_LABELS[t.status]) + '</span>';
+    var overduePill = overdue ? '<span class="pill overdue">เลยกำหนด</span>' : "";
+    var dueText = t.status === "done" ? "" :
+      '<span class="due-text' + (overdue ? " urgent" : "") + '">กำหนดส่ง ' + formatDueShort(t.dueAt) + '</span>';
+
+    return (
+      '<li>' +
+        '<button class="task-card' + (overdue ? " is-overdue" : "") + (t.status === "done" ? " is-done" : "") + '" data-action="open-task" data-id="' + t.id + '">' +
+          '<div class="card-head">' +
+            '<span class="' + starClass + '" aria-label="' + starLabel + '" title="' + starLabel + '">' + starIcon + '</span>' +
+            '<span class="title">' + escapeHtml(t.title) + '</span>' +
+            '<span class="chev" aria-hidden="true">' + ICONS.chev + '</span>' +
+          '</div>' +
+          '<div class="card-body">' +
+            '<div class="card-meta">' + statusPill + overduePill + dueText + '</div>' +
+          '</div>' +
+        '</button>' +
+      '</li>'
+    );
+  }
+
+  function renderDetail(){
+    var t = state.tasks.find(function(x){ return x.id === state.activeTaskId; });
+    if (!t){
+      state.view = "list";
+      return renderList();
+    }
+    var cd = computeCountdown(t.dueAt, t.status);
+    var starIcon = t.important ? ICONS.star : ICONS.starOutline;
+    var starLabel = t.important ? "งานสำคัญ" : "ไม่ใช่งานสำคัญ";
+
+    var html = '<div class="detail">';
+    html += '<div class="detail-topbar"><button class="back-link" data-action="back-to-list">' + ICONS.back + ' กลับ</button></div>';
+    html += '<div class="detail-card">';
+    html += '<div class="detail-header">';
+    html += '<span class="star' + (t.important ? "" : " off") + '" aria-label="' + starLabel + '" title="' + starLabel + '">' + starIcon + '</span>';
+    html += '<h2>' + escapeHtml(t.title) + '</h2>';
+    html += '</div>';
+
+    html += '<div class="detail-body">';
+    html += field("สถานะ", '<span class="pill status-' + t.status + '" style="font-size:13.5px;">' + escapeHtml(STATUS_LABELS[t.status]) + '</span>', true);
+    html += field("หมวด", escapeHtml(CATEGORY_LABELS[t.category] || t.category));
+    html += field("ความสำคัญ", t.important ? "⭐ สำคัญ" : "ไม่ได้ทำเครื่องหมายว่าสำคัญ");
+    html += field("รายละเอียด", t.description ? escapeHtml(t.description) : '<span class="value muted">ไม่มีรายละเอียดเพิ่มเติม</span>', true);
+    html += field("กำหนดส่ง", formatDueFullDate(t.dueAt) + "<br>" + formatDueFullTime(t.dueAt), true);
+
+    html += '<div class="field"><div class="label">เวลาที่เหลือ</div>';
+    html += '<div class="countdown-box ' + cd.state + '">' + (cd.state === "done" ? ICONS.check : ICONS.clock) + ' ' + escapeHtml(cd.text) + '</div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="detail-actions">';
+    html += '<button class="btn secondary" data-action="edit-task" data-id="' + t.id + '">' + ICONS.edit + ' แก้ไข</button>';
+    if (t.status !== "done"){
+      html += '<button class="btn" data-action="mark-done" data-id="' + t.id + '">' + ICONS.check + ' ทำเสร็จแล้ว</button>';
+    }
+    html += '<button class="btn danger" data-action="ask-delete" data-id="' + t.id + '">' + ICONS.trash + ' ลบ</button>';
+    html += '</div>';
+
+    html += '</div></div>';
+    return html;
+  }
+
+  function field(label, valueHtml, raw){
+    return '<div class="field"><div class="label">' + escapeHtml(label) + '</div><div class="value">' + (raw ? valueHtml : valueHtml) + '</div></div>';
+  }
+
+  function renderForm(){
+    var editing = !!state.editingTaskId;
+    var t = editing ? state.tasks.find(function(x){ return x.id === state.editingTaskId; }) : {
+      title: "", category: "school", important: false, description: "",
+      status: "todo", dueAt: ""
+    };
+    if (editing && !t){
+      state.view = "list";
+      return renderList();
+    }
+
+    var dueDate = "", dueTime = "";
+    if (t.dueAt){
+      var d = new Date(t.dueAt);
+      if (!isNaN(d)){
+        dueDate = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+        dueTime = pad(d.getHours()) + ":" + pad(d.getMinutes());
+      }
+    }
+
+    var errs = state.formErrors || {};
+    function errRow(name){ return errs[name] ? " error" : ""; }
+    function errMsg(name){ return errs[name] ? '<div class="err-msg">' + escapeHtml(errs[name]) + '</div>' : ""; }
+
+    var html = '<div class="form-wrap">';
+    html += '<div class="detail-topbar"><button class="back-link" data-action="cancel-form">' + ICONS.back + ' ยกเลิก</button></div>';
+    html += '<form class="task-form" id="task-form" novalidate>';
+
+    html += '<div class="form-row' + errRow("title") + '"><label for="f-title">ชื่อ</label><input id="f-title" name="title" type="text" value="' + escapeHtml(t.title) + '" placeholder="เช่น รายงานวิทยาศาสตร์">' + errMsg("title") + '</div>';
+
+    html += '<div class="form-grid-2">';
+    html += '<div class="form-row"><label for="f-category">หมวด</label><select id="f-category" name="category"><option value="school"' + (t.category === "school" ? " selected" : "") + '>โรงเรียน</option></select></div>';
+    html += '<div class="form-row"><label for="f-status">สถานะ</label><select id="f-status" name="status">' +
+      ['todo','in_progress','done'].map(function(s){
+        return '<option value="' + s + '"' + (t.status === s ? " selected" : "") + '>' + STATUS_LABELS[s] + '</option>';
+      }).join('') +
+    '</select></div>';
+    html += '</div>';
+
+    html += '<div class="form-row checkbox-row"><input id="f-important" name="important" type="checkbox"' + (t.important ? " checked" : "") + '><label for="f-important">งานสำคัญ</label></div>';
+
+    html += '<div class="form-row"><label for="f-description">รายละเอียด</label><textarea id="f-description" name="description" placeholder="รายละเอียดของงาน">' + escapeHtml(t.description || "") + '</textarea></div>';
+
+    html += '<div class="form-grid-2">';
+    html += '<div class="form-row' + errRow("dueDate") + '"><label for="f-due-date">กำหนดวันที่</label><input id="f-due-date" name="dueDate" type="date" value="' + dueDate + '">' + errMsg("dueDate") + '</div>';
+    html += '<div class="form-row' + errRow("dueTime") + '"><label for="f-due-time">กำหนดเวลา</label><input id="f-due-time" name="dueTime" type="time" value="' + dueTime + '">' + errMsg("dueTime") + '</div>';
+    html += '</div>';
+
+    html += '<div class="form-actions">';
+    html += '<button type="button" class="btn secondary" data-action="cancel-form">ยกเลิก</button>';
+    html += '<button type="submit" class="btn">' + (editing ? "บันทึกการแก้ไข" : "สร้างงาน") + '</button>';
+    html += '</div>';
+
+    html += '</form></div>';
+    return html;
+  }
+
+  function renderFab(){
+    if (state.view === "form" || state.loading) return "";
+    return '<button class="fab" data-action="new-task" aria-label="เพิ่มงาน">' + ICONS.plus + '</button>';
+  }
+
+  function renderConfirmOverlay(){
+    if (!state.confirmDeleteId) return "";
+    var t = state.tasks.find(function(x){ return x.id === state.confirmDeleteId; });
+    if (!t) return "";
+    return (
+      '<div class="overlay" data-action="overlay-bg">' +
+        '<div class="confirm-box" role="dialog" aria-modal="true" aria-label="ยืนยันการลบ">' +
+          '<p>ต้องการลบงาน “' + escapeHtml(t.title) + '” หรือไม่?</p>' +
+          '<div class="row">' +
+            '<button class="btn secondary" data-action="cancel-delete">ยกเลิก</button>' +
+            '<button class="btn danger" data-action="confirm-delete">ลบ</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  /* =========================================================
+     Actions & validation
+  ========================================================= */
+  function validateForm(data){
+    var errors = {};
+    if (!data.title || !data.title.trim()){
+      errors.title = "กรุณาระบุชื่องาน";
+    }
+    if (!data.dueDate){
+      errors.dueDate = "กรุณาระบุวันครบกำหนด";
+    }
+    if (!data.dueTime){
+      errors.dueTime = "กรุณาระบุเวลาครบกำหนด";
+    }
+    if (data.dueDate && data.dueTime){
+      var d = new Date(data.dueDate + "T" + data.dueTime + ":00");
+      if (isNaN(d.getTime())){
+        errors.dueDate = "วันหรือเวลาไม่ถูกต้อง";
+      }
+    }
+    if (!CATEGORY_LABELS[data.category]){
+      errors.category = "หมวดไม่ถูกต้อง";
+    }
+    if (!STATUS_LABELS[data.status]){
+      errors.status = "สถานะไม่ถูกต้อง";
+    }
+    return errors;
+  }
+
+  function handleFormSubmit(form){
+    var data = {
+      title: form.title.value,
+      category: form.category.value,
+      status: form.status.value,
+      important: form.important.checked,
+      description: form.description.value,
+      dueDate: form.dueDate.value,
+      dueTime: form.dueTime.value
+    };
+    var errors = validateForm(data);
+    if (Object.keys(errors).length > 0){
+      state.formErrors = errors;
+      render();
+      return;
+    }
+    var dueAt = new Date(data.dueDate + "T" + data.dueTime + ":00").toISOString();
+
+    if (state.editingTaskId){
+      var t = state.tasks.find(function(x){ return x.id === state.editingTaskId; });
+      t.title = data.title.trim();
+      t.category = data.category;
+      t.status = data.status;
+      t.important = data.important;
+      t.description = data.description;
+      t.dueAt = dueAt;
+      t.updatedAt = nowISO();
+      persist();
+      state.view = "detail";
+      state.activeTaskId = t.id;
+    } else {
+      var newTask = {
+        id: uid(),
+        title: data.title.trim(),
+        category: data.category,
+        important: data.important,
+        description: data.description,
+        status: data.status,
+        dueAt: dueAt,
+        createdAt: nowISO(),
+        updatedAt: nowISO()
+      };
+      state.tasks.push(newTask);
+      persist();
+      state.view = "detail";
+      state.activeTaskId = newTask.id;
+    }
+    state.formErrors = {};
+    state.editingTaskId = null;
+    render();
+  }
+
+  function bindEvents(){
+    app.querySelectorAll("[data-action]").forEach(function(el){
+      el.addEventListener("click", function(ev){
+        var action = el.getAttribute("data-action");
+        var id = el.getAttribute("data-id");
+
+        switch(action){
+          case "set-filter":
+            state.filter = el.getAttribute("data-filter");
+            state.view = "list";
+            render();
+            break;
+          case "open-task":
+            state.activeTaskId = id;
+            state.view = "detail";
+            render();
+            window.scrollTo(0,0);
+            break;
+          case "back-to-list":
+            state.view = "list";
+            state.activeTaskId = null;
+            render();
+            break;
+          case "new-task":
+            state.editingTaskId = null;
+            state.formErrors = {};
+            state.view = "form";
+            render();
+            break;
+          case "edit-task":
+            state.editingTaskId = id;
+            state.formErrors = {};
+            state.view = "form";
+            render();
+            break;
+          case "cancel-form":
+            state.formErrors = {};
+            state.view = state.editingTaskId ? "detail" : "list";
+            state.editingTaskId = null;
+            render();
+            break;
+          case "mark-done":
+            var mt = state.tasks.find(function(x){ return x.id === id; });
+            if (mt){ mt.status = "done"; mt.updatedAt = nowISO(); persist(); render(); }
+            break;
+          case "ask-delete":
+            state.confirmDeleteId = id;
+            render();
+            break;
+          case "cancel-delete":
+            state.confirmDeleteId = null;
+            render();
+            break;
+          case "confirm-delete":
+            state.tasks = state.tasks.filter(function(x){ return x.id !== state.confirmDeleteId; });
+            persist();
+            state.confirmDeleteId = null;
+            state.view = "list";
+            state.activeTaskId = null;
+            render();
+            break;
+          case "overlay-bg":
+            if (ev.target === el){
+              state.confirmDeleteId = null;
+              render();
+            }
+            break;
+          case "retry-load":
+            state.loading = true;
+            render();
+            setTimeout(function(){
+              var result = loadTasks();
+              state.loading = false;
+              state.loadError = !result.ok;
+              state.tasks = result.tasks;
+              render();
+            }, 200);
+            break;
+        }
+      });
+    });
+
+    var form = document.getElementById("task-form");
+    if (form){
+      form.addEventListener("submit", function(ev){
+        ev.preventDefault();
+        handleFormSubmit(form);
+      });
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
