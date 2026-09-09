@@ -1,0 +1,61 @@
+:root {
+  --bg: #F1E9D2;
+  --surface: #FFFDF5;
+  --ink: #243B35;
+  --ink-soft: #61756C;
+  --rule: #B7C9B1;
+  --rule-blue: #D7E2D3;
+  --accent: #243B35;
+  --accent-soft: #E4ECE1;
+  --important: #6B8E7B;
+  --important-soft: #E8F0E5;
+  --overdue: #7A4F45;
+  --overdue-soft: #F1E4DC;
+  --done: #4F735F;
+  --done-soft: #E2ECE2;
+}
+body { background: var(--bg); color: var(--ink); }
+.brand-mark { background: var(--surface); border-color: var(--rule); }
+.brand-mark svg { color: var(--accent); }
+.brand-mark::after { background: var(--important); }
+.brand span.sub, .list-head h2, .list-head .hint, .field .label, .form-row label, .due-text, .back-link { color: var(--ink-soft); }
+.btn { background: var(--accent); }
+.btn:hover { background: #1B302B; }
+.btn.secondary { background: var(--surface); color: var(--ink); border-color: var(--rule); }
+.btn.secondary:hover { background: #F7F2E4; }
+.btn.danger { background: var(--overdue-soft); color: var(--overdue); border-color: #D8BDB3; }
+.btn.ghost:hover { background: rgba(36,59,53,.06); color: var(--ink); }
+.layout nav.tabs button { background: #E3E8DE; border-color: var(--rule); color: var(--ink-soft); }
+nav.tabs button.active { background: var(--surface); color: var(--ink); box-shadow: -3px 0 0 var(--important) inset; }
+nav.tabs button.active .count { color: var(--important); }
+main.content { background: var(--surface); border-color: var(--rule); }
+.task-card { background: var(--surface); border-color: var(--rule); }
+.task-card:hover { border-color: #9FB5A0; box-shadow: 0 4px 14px -8px rgba(36,59,53,.35); }
+.card-head { border-bottom-color: var(--important); }
+.card-head .star { color: var(--important); }
+.card-head .star.off { color: var(--rule); }
+.card-head .title, .field .value, .state-block p.lead, .confirm-box p, .checkbox-row label { color: var(--ink); }
+.card-head .chev { color: var(--ink-soft); }
+.card-body, .detail-body { background-image: repeating-linear-gradient(to bottom, transparent, transparent 20px, var(--rule-blue) 20px, var(--rule-blue) 21px); }
+.pill.status-todo { background: #E7E7DD; color: var(--ink-soft); }
+.pill.status-in_progress { background: var(--accent-soft); color: var(--accent); }
+.pill.status-done { background: var(--done-soft); color: var(--done); }
+.pill.overdue, .countdown-box.overdue { background: var(--overdue-soft); color: var(--overdue); }
+.countdown-box { background: var(--accent-soft); color: var(--accent); }
+.countdown-box.urgent { background: var(--important-soft); color: var(--important); }
+.countdown-box.done { background: var(--done-soft); color: var(--done); }
+.detail-card, form.task-form { border-color: var(--rule); }
+.detail-header { border-bottom-color: var(--important); }
+.detail-header .star { color: var(--important); }
+.detail-header .star.off { color: var(--rule); }
+.detail-actions { border-top-color: var(--rule); }
+.form-row input[type=text], .form-row input[type=date], .form-row input[type=time], .form-row select, .form-row textarea { background: #FFFDF5; color: var(--ink); border-color: var(--rule); }
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--important); }
+.form-row.error input, .form-row.error select { border-color: var(--overdue); }
+.checkbox-row input { accent-color: var(--important); }
+.overlay { background: rgba(36,59,53,.35); }
+.confirm-box { background: var(--surface); }
+.fab { background: var(--accent); box-shadow: 0 10px 24px -6px rgba(36,59,53,.45); }
+.state-block { color: var(--ink-soft); }
+:focus-visible { outline-color: var(--important); }
+@media (max-width: 760px) { nav.tabs { background: var(--bg); } }
